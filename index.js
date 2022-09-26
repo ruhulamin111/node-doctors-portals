@@ -23,20 +23,21 @@ async function run() {
         })
 
         app.post('/bookings', async (req, res) => {
-            console.log(req.body);
-            const result = await bookingsCollection.insertOne(req.body);
-            res.send(result)
-            console.log(req.body);
+            const booking = req.body;
+            const query = { serviceName: booking.serviceName, date: booking.date, slot: booking.slot, patientName: booking.patientName };
+            const exists = await bookingsCollection.findOne(query);
+            if (exists) {
+                return res.send({ success: false, booking: exists })
+            }
+            console.log('acb');
+            const result = await bookingsCollection.insertOne(booking);
+            return res.send({ success: true, result })
         })
 
 
         console.log('doctors portals database connected');
-
-    } catch (error) {
-        console.log(error);
     }
     finally {
-
     }
 }
 run().catch(console.dir)
