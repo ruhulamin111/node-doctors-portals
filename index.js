@@ -24,14 +24,27 @@ async function run() {
 
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
-            const query = { serviceName: booking.serviceName, date: booking.date, slot: booking.slot, patientName: booking.patientName };
+            const query = { serviceName: booking.serviceName, date: booking.date, bookingId: booking.bookingId, email: booking.email };
             const exists = await bookingsCollection.findOne(query);
             if (exists) {
                 return res.send({ success: false, booking: exists })
             }
-            console.log('acb');
             const result = await bookingsCollection.insertOne(booking);
             return res.send({ success: true, result })
+        })
+
+        app.get('/available', async (req, res) => {
+            const date = req.query.date;
+            const services = await servicesCollection.find().toArray()
+            const query = { date: date }
+            const booking = await bookingsCollection.find(query).toArray()
+            services.forEach(service => {
+                const bookingservice = booking.filter(item => item.serviceName === service.name);
+                const booked = bookingservice.map(item => item.slot)
+                const available = service.slots.filter(slot => !booked.includes(slot))
+                service.slots = available;
+            })
+            res.send(services)
         })
 
 
