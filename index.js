@@ -39,6 +39,11 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/user', async (req, res) => {
+            const result = await userCollection.find().toArray()
+            res.send(result)
+        })
+
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
