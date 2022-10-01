@@ -16,9 +16,22 @@ async function run() {
         await client.connect()
         const servicesCollection = client.db('doctorsPortals').collection('services')
         const bookingsCollection = client.db('doctorsPortals').collection('bookings')
+        const userCollection = client.db('doctorsPortals').collection('user')
 
         app.get('/services', async (req, res) => {
             const result = await servicesCollection.find({}).toArray()
+            res.send(result)
+        })
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: user,
+            }
+            const result = await userCollection.updateOne(filter, updateDoc, options)
             res.send(result)
         })
 
