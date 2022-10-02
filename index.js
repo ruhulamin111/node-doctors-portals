@@ -52,6 +52,13 @@ async function run() {
             res.send(result)
         })
 
+        app.delete('/doctors/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email }
+            const result = await doctorCollection.deleteOne(filter)
+            res.send(result)
+        })
+
         app.post('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
             const doctor = req.body;
             const result = await doctorCollection.insertOne(doctor);
