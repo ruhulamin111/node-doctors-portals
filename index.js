@@ -36,7 +36,23 @@ async function run() {
         const userCollection = client.db('doctorsPortals').collection('user')
         const doctorCollection = client.db('doctorsPortals').collection('doctor')
 
-        app.post('/doctors', async (req, res) => {
+        const verifyAdmin = async (req, res, next) => {
+            const admin = req.decoded.email;
+            const adminReq = await userCollection.findOne({ email: admin });
+            if (adminReq.role === 'admin') {
+                next()
+            }
+            else {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+        }
+
+        app.get('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
+            const result = await doctorCollection.find().toArray()
+            res.send(result)
+        })
+
+        app.post('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
             const doctor = req.body;
             const result = await doctorCollection.insertOne(doctor);
             res.send(result);
@@ -68,25 +84,18 @@ async function run() {
                 $set: user,
             }
             const result = await userCollection.updateOne(filter, updateDoc, options)
-            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
             res.send({ result, token })
         })
 
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
-            const admin = req.decoded.email;
-            const adminReq = await userCollection.findOne({ email: admin });
-            if (adminReq.role === 'admin') {
-                const filter = { email: email };
-                const updateDoc = {
-                    $set: { role: 'admin' },
-                }
-                const result = await userCollection.updateOne(filter, updateDoc)
-                res.send(result)
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
             }
-            else {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
+            const result = await userCollection.updateOne(filter, updateDoc)
+            res.send(result)
         })
 
         app.get('/booking', verifyJWT, async (req, res) => {
