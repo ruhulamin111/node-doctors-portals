@@ -34,9 +34,16 @@ async function run() {
         const servicesCollection = client.db('doctorsPortals').collection('services')
         const bookingsCollection = client.db('doctorsPortals').collection('bookings')
         const userCollection = client.db('doctorsPortals').collection('user')
+        const doctorCollection = client.db('doctorsPortals').collection('doctor')
+
+        app.post('/doctors', async (req, res) => {
+            const doctor = req.body;
+            const result = await doctorCollection.insertOne(doctor);
+            res.send(result);
+        })
 
         app.get('/services', async (req, res) => {
-            const result = await servicesCollection.find({}).toArray()
+            const result = await servicesCollection.find({}).project({ name: 1 }).toArray();
             res.send(result)
         })
 
