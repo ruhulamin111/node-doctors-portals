@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const e = require('express');
 
 app.use(cors())
 app.use(express.json())
@@ -44,6 +45,13 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email })
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin })
+        })
+
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
@@ -55,6 +63,23 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc, options)
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
             res.send({ result, token })
+        })
+
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const admin = req.decoded.email;
+            const adminReq = await userCollection.findOne({ email: admin });
+            if (adminReq.role === 'admin') {
+                const filter = { email: email };
+                const updateDoc = {
+                    $set: { role: 'admin' },
+                }
+                const result = await userCollection.updateOne(filter, updateDoc)
+                res.send(result)
+            }
+            else {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
         })
 
         app.get('/booking', verifyJWT, async (req, res) => {
