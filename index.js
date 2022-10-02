@@ -127,6 +127,13 @@ async function run() {
             return res.send({ success: true, result })
         })
 
+        app.get('/bookings/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: Object(id) }
+            const result = await bookingsCollection.find(query)
+            res.send(result)
+        })
+
         app.get('/available', async (req, res) => {
             const date = req.query.date;
             const services = await servicesCollection.find().toArray()
