@@ -60,7 +60,7 @@ async function run() {
             }
             const updated = await bookingsCollection.updateOne(filter, updateDoc)
             const result = await paymentCollection.insertOne(payment)
-            res.send(updateDoc)
+            res.send(updated)
         })
 
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
